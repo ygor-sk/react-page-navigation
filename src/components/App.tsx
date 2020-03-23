@@ -1,8 +1,13 @@
 import React from 'react';
-import Products from './Products';
+import Products, {AttributeId} from './Products';
 
 interface AppState {
-    page: string,
+    location: MyLocation
+}
+
+interface MyLocation {
+    pathname: string,
+    search: string
 }
 
 export default class App extends React.Component<any, AppState> {
@@ -10,7 +15,10 @@ export default class App extends React.Component<any, AppState> {
     constructor(props: Readonly<any>) {
         super(props);
         this.state = {
-            page: "pages"
+            location: {
+                pathname: '/',
+                search: ''
+            }
         }
     }
 
@@ -27,17 +35,21 @@ export default class App extends React.Component<any, AppState> {
 
     private renderMenu() {
         return <span>
-            <a href="pages">Pages</a>
+            {this.createButtonLink('Pages', {pathname: '/pages', search: ''})}
             |
-            <a href="blogs">Blogs</a>
+            {this.createButtonLink('Blogs', {pathname: '/blogs', search: ''})}
             |
-            <a href="products">Products</a>
+            {this.createButtonLink('Products', {pathname: '/products', search: ''})}
         </span>
     }
 
+    private createButtonLink(description: string, location: MyLocation) {
+        return <button onClick={() => this.setState({location: location})}>{description}</button>;
+    }
+
     private renderContent() {
-        let params = new URLSearchParams(window.location.search);
-        switch (window.location.pathname) {
+        let params = new URLSearchParams(this.state.location.search);
+        switch (this.state.location.pathname) {
             case '/pages':
                 return <Pages/>
             case '/page':
@@ -47,26 +59,36 @@ export default class App extends React.Component<any, AppState> {
             case '/blog':
                 return <Blog id={parseInt(params.get('id'))}/>
             case '/products':
-                return <Products/>
+                let sortDirection = params.get('sortDirection') ? parseInt(params.get('sortDirection')) : 1;
+                let sortByAttributeId = (params.get('sortByAttributeId') as AttributeId) || "id";
+                return <Products sortByAttributeId={sortByAttributeId} sortDirection={sortDirection}/>
+            case '/':
+                return <div>Welcome to React routing demo</div>
             default:
-                return <div>Page not found: {window.location.pathname}</div>
+                return <div>Page not found: {this.state.location.pathname}</div>
         }
     }
 
     private renderSideMenu() {
-        return <ul>{this.getSideMenuPathNames().map(pathName => <li key={pathName}><a href={pathName}>{pathName}</a></li>)}</ul>
+        return <ul>{this.getSideMenuPathNames().map(location => {
+            let path = location.pathname + '?' + location.search;
+            return <li key={path}>
+                {this.createButtonLink(path, location)}
+            </li>;
+        })}
+        </ul>
     }
 
-    private getSideMenuPathNames(): string[] {
-        switch (window.location.pathname) {
+    private getSideMenuPathNames(): MyLocation[] {
+        switch (this.state.location.pathname) {
             case '/pages':
             case '/page':
-                return ['/page?id=1', '/page?id=2', '/page?id=3']
+                return [1, 2, 3].map(id => ({pathname: '/page', search: `id=${id}`}))
             case '/blogs':
             case '/blog':
-                return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => `/blog?id=${id}`)
+                return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`}))
             case '/products':
-                return []
+            case '/':
             default:
                 return []
         }
