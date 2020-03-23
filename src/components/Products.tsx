@@ -14,15 +14,40 @@ const attributes: { [id in AttributeId]: { title: string } } = {
     price: {title: "Price"},
 }
 
-export default class Products extends React.Component<ProductsProps> {
+interface ProductsState {
+    products: Product[]
+}
+
+export default class Products extends React.Component<ProductsProps, ProductsState> {
+
+    constructor(props: Readonly<ProductsProps>) {
+        super(props);
+        this.state = {products: []}
+    }
+
+    componentDidMount(): void {
+        this.loadProducts();
+    }
+
+    componentDidUpdate(prevProps: Readonly<ProductsProps>, prevState: Readonly<ProductsState>, snapshot?: any): void {
+        if (prevProps.sortBy.attributeId !== this.props.sortBy.attributeId || prevProps.sortBy.direction !== this.props.sortBy.direction) {
+            this.loadProducts();
+        }
+    }
+
+    private loadProducts() {
+        getSortedProducts(this.props.sortBy).then(products => {
+            this.setState({products: products})
+        });
+    }
 
     render() {
         console.log('rendering products', this.props.sortBy);
-        let sortedProducts = getSortedProducts(this.props.sortBy);
 
         function createSortLink(sortBy: SortBy) {
             return `sortByAttributeId=${sortBy.attributeId}&sortByDirection=${sortBy.direction}`;
         }
+
         return <table className="table">
             <tbody>
             <tr>
@@ -39,7 +64,7 @@ export default class Products extends React.Component<ProductsProps> {
                     }
                 )}
             </tr>
-            {sortedProducts.map(product => <tr key={product.id}>
+            {this.state.products.map(product => <tr key={product.id}>
                 <td>{product.id}</td>
                 <td>{product.name}</td>
                 <td>{product.description}</td>

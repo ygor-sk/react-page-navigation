@@ -35,7 +35,10 @@ function createSortFunction(attributeId: AttributeId): (a: Product, b: Product) 
     }
 }
 
-export function getSortedProducts(sortBy: SortBy): Product[] {
+export async function getSortedProducts(sortBy: SortBy): Promise<Product[]> {
     let sortFunction = createSortFunction(sortBy.attributeId);
-    return products.sort((a, b) => sortFunction(a, b) * sortBy.direction);
+    let sortedProducts = products.sort((a, b) => sortFunction(a, b) * sortBy.direction);
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(sortedProducts), 1000);
+    });
 }
