@@ -1,5 +1,6 @@
 import React from "react";
 import {seededRandom} from "../lib/global-util";
+import {PartialLocation} from "./App";
 
 interface Product {
     id: number,
@@ -42,66 +43,32 @@ interface SortBy {
     direction: number
 }
 
-interface ProductsState {
+interface ProductsProps {
+    linkCreator: (title: string | React.ReactNode, location: PartialLocation) => React.ReactNode,
     sortBy: SortBy
 }
 
-export default class Products extends React.Component<any, ProductsState> {
-
-    private historyListener: () => void;
-
-    constructor(props: Readonly<any>) {
-        super(props);
-        this.state = {
-            sortBy: this.getSortFromLocation()
-        }
-    }
-
-    componentDidMount(): void {
-        this.historyListener = () => {
-            this.setState({
-                sortBy: this.getSortFromLocation()
-            })
-        };
-        window.addEventListener("popstate", this.historyListener)
-    }
-
-    private getSortFromLocation() {
-        let params = new URLSearchParams(window.location.search);
-        return {
-            attributeId: params.get('sortByAttributeId') as AttributeId || 'id',
-            direction: parseInt(params.get('sortByDirection') || '1')
-        };
-    }
-
-    componentWillUnmount(): void {
-        window.removeEventListener("popstate", this.historyListener);
-    }
-
+export default class Products extends React.Component<ProductsProps> {
 
     render() {
-        let sortFunction = createSortFunction(this.state.sortBy.attributeId);
-        let sortedProducts = products.sort((a, b) => sortFunction(a, b) * this.state.sortBy.direction);
-        let createOnClickFunction = (sortBy: SortBy) => (e: any) => {
-            e.preventDefault();
-            window.history.pushState(null, '', createSortLink(sortBy))
-            this.setState({sortBy: sortBy});
-        }
+        console.log('rendering products', this.props.sortBy);
+        let sortFunction = createSortFunction(this.props.sortBy.attributeId);
+        let sortedProducts = products.sort((a, b) => sortFunction(a, b) * this.props.sortBy.direction);
         function createSortLink(sortBy: SortBy) {
-            return `?sortByAttributeId=${sortBy.attributeId}&sortByDirection=${sortBy.direction}`;
+            return `sortByAttributeId=${sortBy.attributeId}&sortByDirection=${sortBy.direction}`;
         }
         return <table className="table">
             <tbody>
             <tr>
                 {Object.entries(attributes).map(([attributeId, attribute]) => {
-                    let sortAsc = {attributeId: attributeId as keyof Product, direction: 1};
-                    let sortDesc = {attributeId: attributeId as keyof Product, direction: -1};
-                    return <th key={attributeId}>
+                        let sortAsc = {attributeId: attributeId as keyof Product, direction: 1};
+                        let sortDesc = {attributeId: attributeId as keyof Product, direction: -1};
+                        return <th key={attributeId}>
                             {attribute.title}
                             &nbsp;
-                            <a href={createSortLink(sortAsc)} onClick={createOnClickFunction(sortAsc)}>&uarr;</a>
+                            {this.props.linkCreator(<span>&uarr;</span>, {pathname: '/products', search: createSortLink(sortAsc)})}
                             &nbsp;
-                            <a href={createSortLink(sortDesc)} onClick={createOnClickFunction(sortDesc)}>&darr;</a>
+                            {this.props.linkCreator(<span>&darr;</span>, {pathname: '/products', search: createSortLink(sortDesc)})}
                         </th>;
                     }
                 )}

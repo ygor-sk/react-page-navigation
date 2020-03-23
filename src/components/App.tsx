@@ -5,7 +5,7 @@ interface AppState {
     location: PartialLocation
 }
 
-interface PartialLocation {
+export interface PartialLocation {
     pathname: string,
     search: string
 }
@@ -43,6 +43,7 @@ export default class App extends React.Component<any, AppState> {
     }
 
     render() {
+        console.log('rendering app', this.state.location);
         return <div className="container">
             <div>{this.renderMenu()}</div>
             <div className="row">
@@ -55,38 +56,33 @@ export default class App extends React.Component<any, AppState> {
 
     private renderMenu() {
         return <span>
-            {this.createNavigationLink('Pages', {pathname: '/pages', search: ''})}
-            |
             {this.createNavigationLink('Blogs', {pathname: '/blogs', search: ''})}
             |
             {this.createNavigationLink('Products', {pathname: '/products', search: ''})}
         </span>
     }
 
-    private createNavigationLink(description: string, location: PartialLocation) {
+    private createNavigationLink(title: string | React.ReactNode, location: PartialLocation) {
         let onClick = (e: any) => {
             e.preventDefault();
             window.history.pushState(null, '', formatLocation(location))
             this.setState({location: location});
         };
-        return <a href={formatLocation(location)} onClick={onClick}>{description}</a>;
+        return <a href={formatLocation(location)} onClick={onClick}>{title}</a>;
     }
 
     private renderContent() {
         let params = new URLSearchParams(this.state.location.search);
+        const linkCreator = (title: string | React.ReactNode, location: PartialLocation) => this.createNavigationLink(title, location)
         switch (this.state.location.pathname) {
-            case '/pages':
-                return <Pages/>
-            case '/page':
-                return <Page id={parseInt(params.get('id'))}/>
             case '/blogs':
                 return <Blogs/>
             case '/blog':
                 return <Blog id={parseInt(params.get('id'))}/>
             case '/products':
-                let sortDirection = params.get('sortDirection') ? parseInt(params.get('sortDirection')) : 1;
                 let sortByAttributeId = (params.get('sortByAttributeId') as AttributeId) || "id";
-                return <Products sortByAttributeId={sortByAttributeId} sortDirection={sortDirection}/>
+                let sortDirection = params.get('sortByDirection') ? parseInt(params.get('sortByDirection')) : 1;
+                return <Products sortBy={{attributeId: sortByAttributeId, direction: sortDirection}} linkCreator={linkCreator}/>
             case '/':
                 return <div>Welcome to React routing demo</div>
             default:
@@ -105,9 +101,6 @@ export default class App extends React.Component<any, AppState> {
 
     private getSideMenuPathNames(): PartialLocation[] {
         switch (this.state.location.pathname) {
-            case '/pages':
-            case '/page':
-                return [1, 2, 3].map(id => ({pathname: '/page', search: `id=${id}`}))
             case '/blogs':
             case '/blog':
                 return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`}))
@@ -117,14 +110,6 @@ export default class App extends React.Component<any, AppState> {
                 return []
         }
     }
-}
-
-function Pages() {
-    return <div>Pages</div>
-}
-
-function Page(props: { id: number }) {
-    return <div>Page: {props.id}</div>
 }
 
 function Blogs() {
