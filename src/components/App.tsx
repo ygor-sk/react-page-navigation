@@ -14,6 +14,8 @@ const formatLocation = (location: PartialLocation) => location.search ? `${locat
 
 export default class App extends React.Component<any, AppState> {
 
+    private historyListener: () => void;
+
     constructor(props: Readonly<any>) {
         super(props);
         this.state = {
@@ -25,14 +27,19 @@ export default class App extends React.Component<any, AppState> {
     }
 
     componentDidMount(): void {
-        window.addEventListener("popstate", () => {
+        this.historyListener = () => {
             this.setState({
                 location: {
                     pathname: window.location.pathname,
                     search: window.location.search
                 }
             })
-        })
+        };
+        window.addEventListener("popstate", this.historyListener)
+    }
+
+    componentWillUnmount(): void {
+        window.removeEventListener("popstate", this.historyListener);
     }
 
     render() {
@@ -48,20 +55,21 @@ export default class App extends React.Component<any, AppState> {
 
     private renderMenu() {
         return <span>
-            {this.createButtonLink('Pages', {pathname: '/pages', search: ''})}
+            {this.createNavigationLink('Pages', {pathname: '/pages', search: ''})}
             |
-            {this.createButtonLink('Blogs', {pathname: '/blogs', search: ''})}
+            {this.createNavigationLink('Blogs', {pathname: '/blogs', search: ''})}
             |
-            {this.createButtonLink('Products', {pathname: '/products', search: ''})}
+            {this.createNavigationLink('Products', {pathname: '/products', search: ''})}
         </span>
     }
 
-    private createButtonLink(description: string, location: PartialLocation) {
-        let onClick = () => {
+    private createNavigationLink(description: string, location: PartialLocation) {
+        let onClick = (e: any) => {
+            e.preventDefault();
             window.history.pushState(null, '', formatLocation(location))
             this.setState({location: location});
         };
-        return <button onClick={onClick}>{description}</button>;
+        return <a href={formatLocation(location)} onClick={onClick}>{description}</a>;
     }
 
     private renderContent() {
@@ -89,7 +97,7 @@ export default class App extends React.Component<any, AppState> {
     private renderSideMenu() {
         return <ul>{this.getSideMenuPathNames().map(location => {
             return <li key={formatLocation(location)}>
-                {this.createButtonLink(formatLocation(location), location)}
+                {this.createNavigationLink(formatLocation(location), location)}
             </li>;
         })}
         </ul>
