@@ -1,5 +1,6 @@
 import React from 'react';
-import Products, {AttributeId} from './Products';
+import Products from './Products';
+import {AttributeId} from "./data-source";
 
 interface AppState {
     location: PartialLocation
