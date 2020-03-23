@@ -2,13 +2,15 @@ import React from 'react';
 import Products, {AttributeId} from './Products';
 
 interface AppState {
-    location: MyLocation
+    location: PartialLocation
 }
 
-interface MyLocation {
+interface PartialLocation {
     pathname: string,
     search: string
 }
+
+const formatLocation = (location: PartialLocation) => location.search ? `${location.pathname}?${location.search}` : location.pathname
 
 export default class App extends React.Component<any, AppState> {
 
@@ -16,10 +18,21 @@ export default class App extends React.Component<any, AppState> {
         super(props);
         this.state = {
             location: {
-                pathname: '/',
-                search: ''
+                pathname: window.location.pathname,
+                search: window.location.search
             }
         }
+    }
+
+    componentDidMount(): void {
+        window.addEventListener("popstate", () => {
+            this.setState({
+                location: {
+                    pathname: window.location.pathname,
+                    search: window.location.search
+                }
+            })
+        })
     }
 
     render() {
@@ -43,8 +56,12 @@ export default class App extends React.Component<any, AppState> {
         </span>
     }
 
-    private createButtonLink(description: string, location: MyLocation) {
-        return <button onClick={() => this.setState({location: location})}>{description}</button>;
+    private createButtonLink(description: string, location: PartialLocation) {
+        let onClick = () => {
+            window.history.pushState(null, '', formatLocation(location))
+            this.setState({location: location});
+        };
+        return <button onClick={onClick}>{description}</button>;
     }
 
     private renderContent() {
@@ -71,15 +88,14 @@ export default class App extends React.Component<any, AppState> {
 
     private renderSideMenu() {
         return <ul>{this.getSideMenuPathNames().map(location => {
-            let path = location.pathname + '?' + location.search;
-            return <li key={path}>
-                {this.createButtonLink(path, location)}
+            return <li key={formatLocation(location)}>
+                {this.createButtonLink(formatLocation(location), location)}
             </li>;
         })}
         </ul>
     }
 
-    private getSideMenuPathNames(): MyLocation[] {
+    private getSideMenuPathNames(): PartialLocation[] {
         switch (this.state.location.pathname) {
             case '/pages':
             case '/page':
