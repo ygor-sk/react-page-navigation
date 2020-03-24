@@ -37,9 +37,8 @@ export default class App extends React.Component<any, any> {
             <Route path='/blogs'>
                 <Blogs/>
             </Route>
-            <Route path='/blog' render={props => {
-                const params = new URLSearchParams(props.location.search)
-                return <Blog id={parseInt(params.get('id'))}/>
+            <Route path='/blog/:id' render={props => {
+                return <Blog id={parseInt(props.match.params.id)}/>
             }}/>
             <Route path='/products' render={props => {
                 const params = new URLSearchParams(props.location.search)
@@ -58,7 +57,7 @@ export default class App extends React.Component<any, any> {
     private renderSideMenu() {
         return <Switch>
             <Route path={['/blogs', '/blog']}>
-                {<ul>{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`})).map(location => {
+                {<ul>{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: `/blog/${id}`, search: ''})).map(location => {
                     return <li key={formatLocation(location)}>
                         {<Link to={formatLocation(location)}>{formatLocation(location)}</Link>}
                     </li>;
