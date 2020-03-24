@@ -35,8 +35,10 @@ export default class Products extends React.Component<ProductsProps, ProductsSta
     }
 
     private loadProducts() {
+        // this will throw warning, after component has been unmounted
+        // a real app needs to use a cancellable promise, e.g. Axios's CancelToken, and cancel the promise in componentWillUnmount
         getSortedProducts(this.props.sortByAttributeId).then(products => {
-            this.setState({products: products})
+            this.setState({products: products});
         });
     }
 
