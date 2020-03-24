@@ -82,8 +82,7 @@ export default class App extends React.Component<any, AppState> {
                 return <Blog id={parseInt(params.get('id'))}/>
             case '/products':
                 let sortByAttributeId = (params.get('sortByAttributeId') as AttributeId) || "id";
-                let sortDirection = params.get('sortByDirection') ? parseInt(params.get('sortByDirection')) : 1;
-                return <Products sortBy={{attributeId: sortByAttributeId, direction: sortDirection}} linkCreator={linkCreator}/>
+                return <Products sortByAttributeId={sortByAttributeId} linkCreator={linkCreator}/>
             case '/':
                 return <div>Welcome to React routing demo</div>
             default:

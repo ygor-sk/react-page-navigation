@@ -1,10 +1,10 @@
 import React from "react";
 import {PartialLocation} from "./App";
-import {AttributeId, getSortedProducts, Product, SortBy} from "./data-source";
+import {AttributeId, getSortedProducts, Product} from "./data-source";
 
 interface ProductsProps {
     linkCreator: (title: string | React.ReactNode, location: PartialLocation) => React.ReactNode,
-    sortBy: SortBy
+    sortByAttributeId: AttributeId
 }
 
 const attributes: { [id in AttributeId]: { title: string } } = {
@@ -30,36 +30,30 @@ export default class Products extends React.Component<ProductsProps, ProductsSta
     }
 
     componentDidUpdate(prevProps: Readonly<ProductsProps>, prevState: Readonly<ProductsState>, snapshot?: any): void {
-        if (prevProps.sortBy.attributeId !== this.props.sortBy.attributeId || prevProps.sortBy.direction !== this.props.sortBy.direction) {
+        if (prevProps.sortByAttributeId !== this.props.sortByAttributeId) {
             this.loadProducts();
         }
     }
 
     private loadProducts() {
-        getSortedProducts(this.props.sortBy).then(products => {
+        getSortedProducts(this.props.sortByAttributeId).then(products => {
             this.setState({products: products})
         });
     }
 
     render() {
-        console.log('rendering products', this.props.sortBy);
+        console.log('rendering products', this.props.sortByAttributeId);
 
-        function createSortLink(sortBy: SortBy) {
-            return `sortByAttributeId=${sortBy.attributeId}&sortByDirection=${sortBy.direction}`;
+        function createSortLink(sortByAttributeId: AttributeId) {
+            return `sortByAttributeId=${sortByAttributeId}`;
         }
 
         return <table className="table">
             <tbody>
             <tr>
                 {Object.entries(attributes).map(([attributeId, attribute]) => {
-                        let sortAsc = {attributeId: attributeId as keyof Product, direction: 1};
-                        let sortDesc = {attributeId: attributeId as keyof Product, direction: -1};
-                        return <th key={attributeId}>
-                            {attribute.title}
-                            &nbsp;
-                            {this.props.linkCreator(<span>&uarr;</span>, {pathname: '/products', search: createSortLink(sortAsc)})}
-                            &nbsp;
-                            {this.props.linkCreator(<span>&darr;</span>, {pathname: '/products', search: createSortLink(sortDesc)})}
+                        return <th key={attributeId} style={{fontWeight: this.props.sortByAttributeId === attributeId ? 'bold' : 'normal'}}>
+                            {this.props.linkCreator(attribute.title, {pathname: '/products', search: createSortLink(attributeId as keyof Product)})}
                         </th>;
                     }
                 )}
