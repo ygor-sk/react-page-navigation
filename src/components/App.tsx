@@ -1,10 +1,8 @@
 import React from 'react';
 import Products from './Products';
 import {AttributeId} from "./data-source";
-
-interface AppState {
-    location: PartialLocation
-}
+import {RouteComponentProps} from "react-router";
+import {Link} from 'react-router-dom';
 
 export interface PartialLocation {
     pathname: string,
@@ -13,38 +11,10 @@ export interface PartialLocation {
 
 const formatLocation = (location: PartialLocation) => location.search ? `${location.pathname}?${location.search}` : location.pathname
 
-export default class App extends React.Component<any, AppState> {
-
-    private historyListener: () => void;
-
-    constructor(props: Readonly<any>) {
-        super(props);
-        this.state = {
-            location: {
-                pathname: window.location.pathname,
-                search: window.location.search
-            }
-        }
-    }
-
-    componentDidMount(): void {
-        this.historyListener = () => {
-            this.setState({
-                location: {
-                    pathname: window.location.pathname,
-                    search: window.location.search
-                }
-            })
-        };
-        window.addEventListener("popstate", this.historyListener)
-    }
-
-    componentWillUnmount(): void {
-        window.removeEventListener("popstate", this.historyListener);
-    }
+export default class App extends React.Component<RouteComponentProps, any> {
 
     render() {
-        console.log('rendering app', this.state.location);
+        console.log('rendering app', this.props.location);
         return <div className="container">
             <div>{this.renderMenu()}</div>
             <div className="row">
@@ -57,50 +27,39 @@ export default class App extends React.Component<any, AppState> {
 
     private renderMenu() {
         return <span>
-            {this.createNavigationLink('Blogs', {pathname: '/blogs', search: ''})}
+            {<Link to={formatLocation({pathname: '/blogs', search: ''})}>{'Blogs'}</Link>}
             |
-            {this.createNavigationLink('Products', {pathname: '/products', search: ''})}
+            {<Link to={formatLocation({pathname: '/products', search: ''})}>{'Products'}</Link>}
         </span>
     }
-
-    private createNavigationLink(title: string | React.ReactNode, location: PartialLocation) {
-        let onClick = (e: any) => {
-            e.preventDefault();
-            window.history.pushState(null, '', formatLocation(location))
-            this.setState({location: location});
-        };
-        return <a href={formatLocation(location)} onClick={onClick}>{title}</a>;
-    }
-
     private renderContent() {
-        let params = new URLSearchParams(this.state.location.search);
-        const linkCreator = (title: string | React.ReactNode, location: PartialLocation) => this.createNavigationLink(title, location)
-        switch (this.state.location.pathname) {
+        let params = new URLSearchParams(this.props.location.search);
+        switch (this.props.location.pathname) {
             case '/blogs':
                 return <Blogs/>
             case '/blog':
                 return <Blog id={parseInt(params.get('id'))}/>
             case '/products':
                 let sortByAttributeId = (params.get('sortByAttributeId') as AttributeId) || "id";
-                return <Products sortByAttributeId={sortByAttributeId} linkCreator={linkCreator}/>
+                return <Products sortByAttributeId={sortByAttributeId}/>
             case '/':
                 return <div>Welcome to React routing demo</div>
             default:
-                return <div>Page not found: {this.state.location.pathname}</div>
+                return <div>Page not found: {this.props.location.pathname}</div>
         }
     }
 
     private renderSideMenu() {
         return <ul>{this.getSideMenuPathNames().map(location => {
             return <li key={formatLocation(location)}>
-                {this.createNavigationLink(formatLocation(location), location)}
+                {<Link to={formatLocation(location)}>{formatLocation(location)}</Link>}
             </li>;
         })}
         </ul>
     }
 
     private getSideMenuPathNames(): PartialLocation[] {
-        switch (this.state.location.pathname) {
+        switch (this.props.location.pathname) {
             case '/blogs':
             case '/blog':
                 return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`}))
@@ -119,5 +78,3 @@ function Blogs() {
 function Blog(props: { id: number }) {
     return <div>Blog: {props.id}</div>
 }
-
-

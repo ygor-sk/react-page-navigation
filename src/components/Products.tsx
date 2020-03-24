@@ -1,9 +1,8 @@
 import React from "react";
-import {PartialLocation} from "./App";
 import {AttributeId, getSortedProducts, Product} from "./data-source";
+import {Link} from "react-router-dom";
 
 interface ProductsProps {
-    linkCreator: (title: string | React.ReactNode, location: PartialLocation) => React.ReactNode,
     sortByAttributeId: AttributeId
 }
 
@@ -45,7 +44,7 @@ export default class Products extends React.Component<ProductsProps, ProductsSta
         console.log('rendering products', this.props.sortByAttributeId);
 
         function createSortLink(sortByAttributeId: AttributeId) {
-            return `sortByAttributeId=${sortByAttributeId}`;
+            return `/products?sortByAttributeId=${sortByAttributeId}`;
         }
 
         return <table className="table">
@@ -53,7 +52,7 @@ export default class Products extends React.Component<ProductsProps, ProductsSta
             <tr>
                 {Object.entries(attributes).map(([attributeId, attribute]) => {
                         return <th key={attributeId} style={{fontWeight: this.props.sortByAttributeId === attributeId ? 'bold' : 'normal'}}>
-                            {this.props.linkCreator(attribute.title, {pathname: '/products', search: createSortLink(attributeId as keyof Product)})}
+                            <Link to={createSortLink(attributeId as keyof Product)}>{attribute.title}</Link>
                         </th>;
                     }
                 )}
