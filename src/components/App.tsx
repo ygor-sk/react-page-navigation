@@ -1,8 +1,7 @@
 import React from 'react';
 import Products from './Products';
 import {AttributeId} from "./data-source";
-import {RouteComponentProps} from "react-router";
-import {Link} from 'react-router-dom';
+import {BrowserRouter, Link, Route, Switch} from 'react-router-dom';
 
 export interface PartialLocation {
     pathname: string,
@@ -11,17 +10,17 @@ export interface PartialLocation {
 
 const formatLocation = (location: PartialLocation) => location.search ? `${location.pathname}?${location.search}` : location.pathname
 
-export default class App extends React.Component<RouteComponentProps, any> {
+export default class App extends React.Component<any, any> {
 
     render() {
-        console.log('rendering app', this.props.location);
         return <div className="container">
-            <div>{this.renderMenu()}</div>
-            <div className="row">
-                <div className="col-3">{this.renderSideMenu()}</div>
-                <div className="col-9">{this.renderContent()}</div>
-            </div>
-
+            <BrowserRouter>
+                <div>{this.renderMenu()}</div>
+                <div className="row">
+                    <div className="col-3">{this.renderSideMenu()}</div>
+                    <div className="col-9">{this.renderContent()}</div>
+                </div>
+            </BrowserRouter>
         </div>;
     }
 
@@ -32,42 +31,42 @@ export default class App extends React.Component<RouteComponentProps, any> {
             {<Link to={formatLocation({pathname: '/products', search: ''})}>{'Products'}</Link>}
         </span>
     }
+
     private renderContent() {
-        let params = new URLSearchParams(this.props.location.search);
-        switch (this.props.location.pathname) {
-            case '/blogs':
-                return <Blogs/>
-            case '/blog':
+        return <Switch>
+            <Route path='/blogs'>
+                <Blogs/>
+            </Route>
+            <Route path='/blog' render={props => {
+                const params = new URLSearchParams(props.location.search)
                 return <Blog id={parseInt(params.get('id'))}/>
-            case '/products':
+            }}/>
+            <Route path='/products' render={props => {
+                const params = new URLSearchParams(props.location.search)
                 let sortByAttributeId = (params.get('sortByAttributeId') as AttributeId) || "id";
                 return <Products sortByAttributeId={sortByAttributeId}/>
-            case '/':
-                return <div>Welcome to React routing demo</div>
-            default:
-                return <div>Page not found: {this.props.location.pathname}</div>
-        }
+            }}/>
+            <Route path='/'>
+                <div>Welcome to React routing demo</div>
+            </Route>
+            <Route path='*' render={props => {
+                return <div>Page not found: {props.location.pathname}</div>
+            }}/>
+        </Switch>
     }
 
     private renderSideMenu() {
-        return <ul>{this.getSideMenuPathNames().map(location => {
-            return <li key={formatLocation(location)}>
-                {<Link to={formatLocation(location)}>{formatLocation(location)}</Link>}
-            </li>;
-        })}
-        </ul>
-    }
-
-    private getSideMenuPathNames(): PartialLocation[] {
-        switch (this.props.location.pathname) {
-            case '/blogs':
-            case '/blog':
-                return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`}))
-            case '/products':
-            case '/':
-            default:
-                return []
-        }
+        return <Switch>
+            <Route path={['/blogs', '/blog']}>
+                {<ul>{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(id => ({pathname: '/blog', search: `id=${id}`})).map(location => {
+                    return <li key={formatLocation(location)}>
+                        {<Link to={formatLocation(location)}>{formatLocation(location)}</Link>}
+                    </li>;
+                })}
+                </ul>}
+            </Route>
+            <Route path='*'/>
+        </Switch>
     }
 }
 
